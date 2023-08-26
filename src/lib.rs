@@ -1,3 +1,8 @@
+/// macros to create version manager CLIs.
+/// depending on argument, it will create one of two variants:
+/// 0. version manager for a package (mirror location, version, env vars, …)
+/// 1. version manager for a service (daemon, port, hostname, …); also includes ↑
+
 /*#[macro_use]
 extern crate lazy_static;
 
@@ -9,8 +14,7 @@ lazy_static! {
 #[macro_export]
 macro_rules! cli_struct {
     ($name:expr, $author:expr, $version:expr, $about:expr) => {
-        use clap::Parser;
-        use std::path::PathBuf;
+        use clap::{Args, Parser, Subcommand};
 
         #[derive(Parser)]
         #[command(name = $name)]
@@ -22,63 +26,74 @@ macro_rules! cli_struct {
             command: Commands,
 
             #[arg(long, env = "APP_VERSION", default_value_t = String::from("latest"))]
-            appVersion: String,
+            app_version: String,
 
             #[arg(long, env = "ROOT", default_value_t = String::from("$HOME/version-managers"))]
             root: String,
+
+            #[arg(short, long, env = "PORT")]
+            port: u16,
         }
 
         #[derive(Subcommand)]
         enum Commands {
             /// Download specified version
-            Download { version: Option<String> },
+            Download {
+                version: Option<String>,
+            },
 
             /// Print out associated environment variables
-            Env { },
+            Env {},
 
             /// Reload specified version
-            Reload { version: Option<String> },
+            Reload {
+                version: Option<String>,
+            },
 
             /// Start specified version
-            Start { version: Option<String> },
+            Start {
+                version: Option<String>,
+            },
 
             /// Stop specified version
-            Stop { version: Option<String> },
+            Stop {
+                version: Option<String>,
+            },
 
             /// Install specified version
-            Install { version: Option<String> },
+            Install {
+                version: Option<String>,
+            },
 
             /// List what versions are installed
-            Ls { },
+            Ls {},
 
             /// List what versions are available
-            LsRemote { },
+            LsRemote {},
+
+            /// Print out database connection string
+            Uri {},
+
+            InstallService(InstallService),
+        }
+
+        #[derive(Debug, Args)]
+        #[command(args_conflicts_with_subcommands = true)]
+        struct InstallService {
+            #[command(subcommand)]
+            command: InstallCommands,
+        }
+
+        #[derive(Debug, Subcommand)]
+        enum InstallCommands {
+            /// Install OpenRC service
+            OpenRc {},
+
+            /// Install systemd service
+            Systemd {},
+
+            /// Install Windows Service
+            WindowsService {},
         }
     };
 }
-
-/*
-
-Storage layer specific CLI args:
-
-/* global args */
-#[arg(short, long, env = "PORT")]
-
-port: u16,
-
-/* subcommands */
-
-/// Print out database connection string
-uri {},
-
-installService {
-    /// Install OpenRC service
-    openrc {},
-
-    /// Install systemd service
-    systemd  {},
-
-    /// Install Windows Service
-    windows-service {}
-}
-*/
