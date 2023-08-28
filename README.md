@@ -16,7 +16,7 @@ What is new is taking this to its logical extreme, ending up with independent cr
 
 - Databases
   - [PostgreSQL](https://www.postgresql.org)
-  - [MySQL](https://www.mysql.com) ⊕ [MariaDB](https://mariadb.org)
+  - [MySQL](https://www.mysql.com) ⊕ [$name](https://$name.org)
   - [RabbitMQ](https://www.rabbitmq.com/)
   - [Memcached](https://memcached.org)
   - [MongoDB](https://www.mongodb.com)
@@ -63,7 +63,7 @@ What is new is taking this to its logical extreme, ending up with independent cr
 
 This is not a replacement for any of these technologies. It does simplify their usage, and also simplify usage without any of these tools (e.g., normal native deployment with 5 lines to deploy 5 systems).
 
-In terms of simplifying their usage, your [Dockerfile](https://docs.docker.com/engine/reference/builder), [Chef](https://www.chef.io) recipe or what have you become one line (e.g., for a custom [MariaDB](https://mariadb.org) image) or five lines (e.g., for a full application with no dependent images).
+In terms of simplifying their usage, your [Dockerfile](https://docs.docker.com/engine/reference/builder), [Chef](https://www.chef.io) recipe or what have you become one line (e.g., for a custom [$name](https://$name.org) image) or five lines (e.g., for a full application with no dependent images).
 
 It also makes it easier to mix-and-match with hosted services, e.g., swap out self-hosted [PostgreSQL](https://www.postgresql.org) for [Google Cloud](https://cloud.google.com)'s DBaaS [AlloyDB](https://cloud.google.com/alloydb).
 
@@ -74,11 +74,224 @@ This crate defines the CLI that is then used by all these version managers. All 
 Also note that the CLI arguments are language agnostic, e.g., here is a go implementation for [PostgreSQL](https://www.postgresql.org):
 https://github.com/offscale/postgres-version-manager-go
 
-## CLI documentation
+<hr/>
 
-(subcommands follow at deeper levels)
+## Command Overview
 
-Global arguments:
+* [`$name-version-manager-rs`↴](#$name-version-manager-rs)
+* [`$name-version-manager-rs download`↴](#$name-version-manager-rs-download)
+* [`$name-version-manager-rs env`↴](#$name-version-manager-rs-env)
+* [`$name-version-manager-rs install`↴](#$name-version-manager-rs-install)
+* [`$name-version-manager-rs ls`↴](#$name-version-manager-rs-ls)
+* [`$name-version-manager-rs ls-remote`↴](#$name-version-manager-rs-ls-remote)
+* [`$name-version-manager-rs reload`↴](#$name-version-manager-rs-reload)
+* [`$name-version-manager-rs start`↴](#$name-version-manager-rs-start)
+* [`$name-version-manager-rs stop`↴](#$name-version-manager-rs-stop)
+* [`$name-version-manager-rs uri`↴](#$name-version-manager-rs-uri)
+* [`$name-version-manager-rs install-service`↴](#$name-version-manager-rs-install-service)
+* [`$name-version-manager-rs install-service open-rc`↴](#$name-version-manager-rs-install-service-open-rc)
+* [`$name-version-manager-rs install-service systemd`↴](#$name-version-manager-rs-install-service-systemd)
+* [`$name-version-manager-rs install-service windows-service`↴](#$name-version-manager-rs-install-service-windows-service)
+
+## `$name-version-manager-rs`
+
+
+
+**Usage:** `$name-version-manager-rs [OPTIONS] --port <PORT> <COMMAND>`
+
+###### **Subcommands:**
+
+* `download` — Download specified version
+* `env` — Print out associated environment variables
+* `install` — Install specified version
+* `ls` — List what versions are installed
+* `ls-remote` — List what versions are available
+* `reload` — Reload specified version
+* `start` — Start specified version
+* `stop` — Stop specified version
+* `uri` — Print out database connection string
+* `install-service` — Install service (daemon), e.g., systemd, OpenRC, windows-service
+
+###### **Options:**
+
+* `--app-version <APP_VERSION>`
+
+  Default value: `latest`
+* `--root <ROOT>`
+
+  Default value: `$HOME/version-managers/$name-version-manager-rs`
+* `--hostname <HOSTNAME>`
+
+  Default value: `localhost`
+* `-p`, `--port <PORT>`
+* `--markdown-help`
+
+
+
+## `$name-version-manager-rs download`
+
+Download specified version
+
+**Usage:** `$name-version-manager-rs download [VERSION]`
+
+###### **Arguments:**
+
+* `<VERSION>`
+
+
+
+## `$name-version-manager-rs env`
+
+Print out associated environment variables
+
+**Usage:** `$name-version-manager-rs env`
+
+
+
+## `$name-version-manager-rs install`
+
+Install specified version
+
+**Usage:** `$name-version-manager-rs install [VERSION]`
+
+###### **Arguments:**
+
+* `<VERSION>`
+
+
+
+## `$name-version-manager-rs ls`
+
+List what versions are installed
+
+**Usage:** `$name-version-manager-rs ls`
+
+
+
+## `$name-version-manager-rs ls-remote`
+
+List what versions are available
+
+**Usage:** `$name-version-manager-rs ls-remote`
+
+
+
+## `$name-version-manager-rs reload`
+
+Reload specified version
+
+**Usage:** `$name-version-manager-rs reload [VERSION]`
+
+###### **Arguments:**
+
+* `<VERSION>`
+
+
+
+## `$name-version-manager-rs start`
+
+Start specified version
+
+**Usage:** `$name-version-manager-rs start [VERSION]`
+
+###### **Arguments:**
+
+* `<VERSION>`
+
+
+
+## `$name-version-manager-rs stop`
+
+Stop specified version
+
+**Usage:** `$name-version-manager-rs stop [VERSION]`
+
+###### **Arguments:**
+
+* `<VERSION>`
+
+
+
+## `$name-version-manager-rs uri`
+
+Print out database connection string
+
+**Usage:** `$name-version-manager-rs uri`
+
+
+
+## `$name-version-manager-rs install-service`
+
+Install service (daemon), e.g., systemd, OpenRC, windows-service
+
+**Usage:** `$name-version-manager-rs install-service
+install-service <COMMAND>`
+
+###### **Subcommands:**
+
+* `open-rc` — Install OpenRC service
+* `systemd` — Install systemd service
+* `windows-service` — Install Windows Service
+
+
+
+## `$name-version-manager-rs install-service open-rc`
+
+Install OpenRC service
+
+**Usage:** `$name-version-manager-rs install-service open-rc [OPTIONS]`
+
+###### **Options:**
+
+* `--group <GROUP>`
+
+  Default value: `$name-version-manager-rs`
+* `--config-install-path <CONFIG_INSTALL_PATH>`
+
+  Default value: `/etc/conf.d/$name-version-manager-rs`
+* `--service-install-path <SERVICE_INSTALL_PATH>`
+
+  Default value: `/etc/init.d/$name-version-manager-rs`
+* `--user <USER>`
+
+  Default value: `$name-version-manager-rs`
+
+
+
+## `$name-version-manager-rs install-service systemd`
+
+Install systemd service
+
+**Usage:** `$name-version-manager-rs install-service systemd [OPTIONS]`
+
+###### **Options:**
+
+* `--group <GROUP>`
+
+  Default value: `$name-version-manager-rs`
+* `--service-install-path <SERVICE_INSTALL_PATH>`
+
+  Default value: `/etc/systemd/system/$name-version-manager-rs.service`
+* `--user <USER>`
+
+  Default value: `$name-version-manager-rs`
+
+
+
+## `$name-version-manager-rs install-service windows-service`
+
+Install Windows Service
+
+**Usage:** `$name-version-manager-rs install-service windows-service [OPTIONS]`
+
+###### **Options:**
+
+* `--service-name <SERVICE_NAME>`
+
+  Default value: `$name-version-manager-rs`
+* `--service-description <SERVICE_DESCRIPTION>`
+
+  Default value: ``
 
 ---
 

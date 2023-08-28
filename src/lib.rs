@@ -82,6 +82,7 @@ macro_rules! cli_struct {
             /// Print out database connection string
             Uri {},
 
+            /// Install service (daemon), e.g., systemd, OpenRC, windows-service
             InstallService(InstallService),
         }
 
