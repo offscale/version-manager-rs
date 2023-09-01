@@ -16,6 +16,13 @@ macro_rules! cli_struct {
         use clap::{Args, Parser, Subcommand};
         use const_format::concatcp;
 
+        const ROOT_DEFAULT: &'static str = concatcp!(
+                "$HOME", std::path::MAIN_SEPARATOR_STR, "version-managers",
+                std::path::MAIN_SEPARATOR_STR, $name);
+
+        const VERSIONED_ROOT_DEFAULT: &'static str = concatcp!(
+                ROOT_DEFAULT, std::path::MAIN_SEPARATOR_STR, $name, "latest");
+
         #[derive(Parser)]
         #[command(name = $name)]
         #[command(author = $author)]
@@ -28,16 +35,33 @@ macro_rules! cli_struct {
             #[arg(long, env = "APP_VERSION", default_value_t = String::from("latest"))]
             app_version: String,
 
-            #[arg(long, env = "ROOT", default_value_os_t = String::from(concatcp!(
-                "$HOME", std::path::MAIN_SEPARATOR_STR, "version-managers",
-                std::path::MAIN_SEPARATOR_STR, $name)))]
-            root: String,
+            #[arg(long, env = "ROOT", default_value_os_t = std::ffi::OsString::from(ROOT_DEFAULT))]
+            root: std::ffi::OsString,
 
             #[arg(long, env = "HOSTNAME", default_value_t = String::from("localhost"))]
             hostname: String,
 
             #[arg(short, long, env = "PORT")]
             port: u16,
+
+            #[arg(long, env = "DATABASE", default_value_t = String::from("database"))]
+            database: String,
+
+            #[arg(long, env = "RUNTIME_PATH", default_value_os_t =  std::ffi::OsString::from(concatcp!(VERSIONED_ROOT_DEFAULT, std::path::MAIN_SEPARATOR_STR, "run")))]
+            runtime_path: std::ffi::OsString,
+
+            #[arg(long, env = "DATA_PATH", default_value_os_t = std::ffi::OsString::from(concatcp!(VERSIONED_ROOT_DEFAULT, std::path::MAIN_SEPARATOR_STR, "data")))]
+            data_path: std::ffi::OsString,
+
+            #[arg(long, env = "BIN_PATH", default_value_os_t = std::ffi::OsString::from(concatcp!(VERSIONED_ROOT_DEFAULT, std::path::MAIN_SEPARATOR_STR, "bin")))]
+            bin_path: std::ffi::OsString,
+
+            #[arg(long, env = "LOGS_PATH",
+            default_value_os_t = std::ffi::OsString::from(concatcp!(VERSIONED_ROOT_DEFAULT, std::path::MAIN_SEPARATOR_STR, "logs")))]
+            logs_path: std::ffi::OsString,
+
+            #[arg(long, env = "LC_ALL", default_value_t = String::from("en_US.UTF-8"))]
+            locale: String,
 
             #[arg(long, hide = true)]
             markdown_help: bool,
@@ -100,11 +124,11 @@ macro_rules! cli_struct {
                 #[arg(long, env = "GROUP", default_value_t = String::from($name))]
                 group: String,
 
-                #[arg(long, env = "CONFIG_INSTALL_PATH", default_value_t = String::from(concat!("/etc/conf.d/", $name)))]
-                configInstallPath: String,
+                #[arg(long, env = "CONFIG_INSTALL_PATH", default_value_t = std::ffi::OsString::from(concat!("/etc/conf.d/", $name)))]
+                configInstallPath: std::ffi::OsString,
 
-                #[arg(long, env = "SERVICE_INSTALL_PATH", default_value_t = String::from(concat!("/etc/init.d/", $name)))]
-                serviceInstallPath: String,
+                #[arg(long, env = "SERVICE_INSTALL_PATH", default_value_t = std::ffi::OsString::from(concat!("/etc/init.d/", $name)))]
+                serviceInstallPath: std::ffi::OsString,
 
                 #[arg(long, env = "USER", default_value_t = String::from($name))]
                 user: String,
@@ -115,8 +139,8 @@ macro_rules! cli_struct {
                 #[arg(long, env = "GROUP", default_value_t = String::from($name))]
                 group: String,
 
-                #[arg(long, env = "SERVICE_INSTALL_PATH", default_value_t = String::from(concat!("/etc/systemd/system/", $name, ".service")))]
-                serviceInstallPath: String,
+                #[arg(long, env = "SERVICE_INSTALL_PATH", default_value_t = std::ffi::OsString::from(concat!("/etc/systemd/system/", $name, ".service")))]
+                serviceInstallPath: std::ffi::OsString,
 
                 #[arg(long, env = "USER", default_value_t = String::from($name))]
                 user: String,
