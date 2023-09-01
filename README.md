@@ -59,7 +59,7 @@ What is new is taking this to its logical extreme, ending up with independent cr
   - [OpenEdX](https://openedx.org)
   - …
 
-## Comparison to [Docker](https://www.docker.com), [Terraform](https://www.terraform.io) and [Packer](https://www.packer.io), [Puppet](https://www.puppet.com), &etc.
+## Comparison to: [Docker](https://www.docker.com); [Terraform](https://www.terraform.io) and [Packer](https://www.packer.io); [Puppet](https://www.puppet.com); &etc.
 
 This is not a replacement for any of these technologies. It does simplify their usage, and also simplify usage without any of these tools (e.g., normal native deployment with 5 lines to deploy 5 systems).
 

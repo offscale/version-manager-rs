@@ -124,11 +124,11 @@ macro_rules! cli_struct {
                 #[arg(long, env = "GROUP", default_value_t = String::from($name))]
                 group: String,
 
-                #[arg(long, env = "CONFIG_INSTALL_PATH", default_value_t = std::ffi::OsString::from(concat!("/etc/conf.d/", $name)))]
-                configInstallPath: std::ffi::OsString,
+                #[arg(long, env = "CONFIG_INSTALL_PATH", default_value_os_t = std::ffi::OsString::from(concat!("/etc/conf.d/", $name)))]
+                config_install_path: std::ffi::OsString,
 
-                #[arg(long, env = "SERVICE_INSTALL_PATH", default_value_t = std::ffi::OsString::from(concat!("/etc/init.d/", $name)))]
-                serviceInstallPath: std::ffi::OsString,
+                #[arg(long, env = "SERVICE_INSTALL_PATH", default_value_os_t = std::ffi::OsString::from(concat!("/etc/init.d/", $name)))]
+                service_install_path: std::ffi::OsString,
 
                 #[arg(long, env = "USER", default_value_t = String::from($name))]
                 user: String,
@@ -139,8 +139,8 @@ macro_rules! cli_struct {
                 #[arg(long, env = "GROUP", default_value_t = String::from($name))]
                 group: String,
 
-                #[arg(long, env = "SERVICE_INSTALL_PATH", default_value_t = std::ffi::OsString::from(concat!("/etc/systemd/system/", $name, ".service")))]
-                serviceInstallPath: std::ffi::OsString,
+                #[arg(long, env = "SERVICE_INSTALL_PATH", default_value_os_t = std::ffi::OsString::from(concat!("/etc/systemd/system/", $name, ".service")))]
+                service_install_path: std::ffi::OsString,
 
                 #[arg(long, env = "USER", default_value_t = String::from($name))]
                 user: String,
@@ -149,10 +149,10 @@ macro_rules! cli_struct {
             /// Install Windows Service
             WindowsService {
                 #[arg(long, env = "SERVICE_NAME", default_value_t = String::from($name))]
-                serviceName: String,
+                service_name: String,
 
                 #[arg(long, env = "SERVICE_DESCRIPTION", default_value_t = String::from($about))]
-                serviceDescription: String,
+                service_description: String,
             },
         }
     };
