@@ -15,59 +15,90 @@ macro_rules! cli_struct {
     ($name:expr, $author:expr, $version:expr, $about:expr) => {
         use clap::{Args, Parser, Subcommand};
         use const_format::concatcp;
+        use serde::{Serialize, Deserialize};
 
         const ROOT_DEFAULT: &'static str = concatcp!(
                 "$HOME", std::path::MAIN_SEPARATOR_STR, "version-managers",
                 std::path::MAIN_SEPARATOR_STR, $name);
 
         const VERSIONED_ROOT_DEFAULT: &'static str = concatcp!(
-                ROOT_DEFAULT, std::path::MAIN_SEPARATOR_STR, $name, "latest");
+                ROOT_DEFAULT, std::path::MAIN_SEPARATOR_STR, $name,
+                std::path::MAIN_SEPARATOR_STR, "$APP_VERSION");
 
-        #[derive(Parser)]
+        #[derive(Parser, Serialize, Deserialize, Debug)]
         #[command(name = $name)]
         #[command(author = $author)]
         #[command(version = $version)]
         #[command(about = $about, long_about = None)]
         struct Cli {
+            /// Config file to read from. If provided used as new default (before env and argv res).
+            #[serde(skip)]
+            #[arg(long, env = "VMS_CONFIG", default_value_os_t =  std::ffi::OsString::from(concatcp!(ROOT_DEFAULT, std::path::MAIN_SEPARATOR_STR, "vms-config.json")))]
+            vms_config: std::ffi::OsString,
+
+            /// Whether to read from config file. If vms_config provided, this defaults to `true`.
+            #[arg(long, env = "VMS_CONFIG_READ", default_value_t=false)]
+            config_read: bool,
+
+            /// Whether to write to config file.
+            #[arg(long, env = "VMS_CONFIG_WRITE", default_value_t=true)]
+            config_write: bool,
+
+            #[serde(skip, default="_default_command")]
             #[command(subcommand)]
             command: Commands,
 
+            /// Desired version of application.
             #[arg(long, env = "APP_VERSION", default_value_t = String::from("latest"))]
             app_version: String,
 
+            /// Root directory. By default all paths are relative to this one.
             #[arg(long, env = "ROOT", default_value_os_t = std::ffi::OsString::from(ROOT_DEFAULT))]
             root: std::ffi::OsString,
 
+            /// Hostname of server.
             #[arg(long, env = "HOSTNAME", default_value_t = String::from("localhost"))]
             hostname: String,
 
+            /// Port for server to listen on.
             #[arg(short, long, env = "PORT")]
             port: u16,
 
+            /// Database name.
             #[arg(long, env = "DATABASE", default_value_t = String::from("database"))]
             database: String,
 
+            /// Runtime path.
             #[arg(long, env = "RUNTIME_PATH", default_value_os_t =  std::ffi::OsString::from(concatcp!(VERSIONED_ROOT_DEFAULT, std::path::MAIN_SEPARATOR_STR, "run")))]
             runtime_path: std::ffi::OsString,
 
+            /// Data path. This is where the actual data is stored, e.g., the .db and WAL files.
             #[arg(long, env = "DATA_PATH", default_value_os_t = std::ffi::OsString::from(concatcp!(VERSIONED_ROOT_DEFAULT, std::path::MAIN_SEPARATOR_STR, "data")))]
             data_path: std::ffi::OsString,
 
+            /// Binary path. Where the executable binary are located. Sometimes called PREFIX.
             #[arg(long, env = "BIN_PATH", default_value_os_t = std::ffi::OsString::from(concatcp!(VERSIONED_ROOT_DEFAULT, std::path::MAIN_SEPARATOR_STR, "bin")))]
             bin_path: std::ffi::OsString,
 
-            #[arg(long, env = "LOGS_PATH",
-            default_value_os_t = std::ffi::OsString::from(concatcp!(VERSIONED_ROOT_DEFAULT, std::path::MAIN_SEPARATOR_STR, "logs")))]
+            /// Logs path. Where the log files are to be stored.
+            #[arg(long, env = "LOGS_PATH", default_value_os_t = std::ffi::OsString::from(concatcp!(VERSIONED_ROOT_DEFAULT, std::path::MAIN_SEPARATOR_STR, "logs")))]
             logs_path: std::ffi::OsString,
 
+            /// Locale to use.
             #[arg(long, env = "LC_ALL", default_value_t = String::from("en_US.UTF-8"))]
             locale: String,
 
+            /// Markdown help generator. Only really used to generate replacement README.md files.
             #[arg(long, hide = true)]
             markdown_help: bool,
         }
 
-        #[derive(Subcommand)]
+        fn _default_command() -> Commands {
+            Commands::Unknown
+        }
+
+        #[derive(Subcommand, Debug, Serialize, Deserialize)]
+        //#[serde(untagged)]
         enum Commands {
             /// Download specified version
             Download {
@@ -108,16 +139,19 @@ macro_rules! cli_struct {
 
             /// Install service (daemon), e.g., systemd, OpenRC, windows-service
             InstallService(InstallService),
+
+            #[serde(other)]
+            Unknown
         }
 
-        #[derive(Debug, Args)]
+        #[derive(Debug, Args, Serialize, Deserialize)]
         #[command(args_conflicts_with_subcommands = true)]
         struct InstallService {
             #[command(subcommand)]
             command: InstallServiceCommands,
         }
 
-        #[derive(Debug, Subcommand)]
+        #[derive(Debug, Subcommand, Serialize, Deserialize)]
         enum InstallServiceCommands {
             /// Install OpenRC service
             OpenRc {
