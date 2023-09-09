@@ -68,7 +68,7 @@ macro_rules! cli_struct {
             #[arg(long, env = "DATABASE", default_value_t = String::from("database"))]
             database: String,
 
-            /// Runtime path.
+            /// Runtime path. This is where PID files and/or similar temporary files are stored.
             #[arg(long, env = "RUNTIME_PATH", default_value_os_t =  std::ffi::OsString::from(concatcp!(VERSIONED_ROOT_DEFAULT, std::path::MAIN_SEPARATOR_STR, "run")))]
             runtime_path: std::ffi::OsString,
 

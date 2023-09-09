@@ -143,7 +143,7 @@ This document contains the help content for the `NAME-manager-rs` command-line p
 * `--database <DATABASE>` — Database name
 
   Default value: `database`
-* `--runtime-path <RUNTIME_PATH>` — Runtime path
+* `--runtime-path <RUNTIME_PATH>` — Runtime path. This is where PID files and/or similar temporary files are stored.
 
   Default value: `$HOME/version-managers/NAME-manager-rs/NAME-manager-rs/$APP_VERSION/run`
 * `--data-path <DATA_PATH>` — Data path. This is where the actual data is stored, e.g., the .db and WAL files
