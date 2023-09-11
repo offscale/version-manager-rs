@@ -11,19 +11,28 @@ lazy_static! {
 }*/
 
 #[macro_export]
-macro_rules! cli_struct {
+macro_rules! cli_struct_and_helpers {
     ($name:expr, $author:expr, $version:expr, $about:expr) => {
         use clap::{Args, Parser, Subcommand};
         use const_format::concatcp;
-        use serde::{Serialize, Deserialize};
+        use serde::{Deserialize, Serialize};
+        use std::fmt::{Debug, Formatter};
 
         const ROOT_DEFAULT: &'static str = concatcp!(
-                "$HOME", std::path::MAIN_SEPARATOR_STR, "version-managers",
-                std::path::MAIN_SEPARATOR_STR, $name);
+            "$HOME",
+            std::path::MAIN_SEPARATOR_STR,
+            "version-managers",
+            std::path::MAIN_SEPARATOR_STR,
+            $name
+        );
 
         const VERSIONED_ROOT_DEFAULT: &'static str = concatcp!(
-                ROOT_DEFAULT, std::path::MAIN_SEPARATOR_STR, $name,
-                std::path::MAIN_SEPARATOR_STR, "$APP_VERSION");
+            ROOT_DEFAULT,
+            std::path::MAIN_SEPARATOR_STR,
+            $name,
+            std::path::MAIN_SEPARATOR_STR,
+            "$APP_VERSION"
+        );
 
         #[derive(Parser, Serialize, Deserialize, Debug)]
         #[command(name = $name)]
@@ -37,14 +46,14 @@ macro_rules! cli_struct {
             vms_config: std::ffi::OsString,
 
             /// Whether to read from config file. If vms_config provided, this defaults to `true`.
-            #[arg(long, env = "VMS_CONFIG_READ", default_value_t=false)]
+            #[arg(long, env = "VMS_CONFIG_READ", default_value_t = false)]
             config_read: bool,
 
             /// Whether to write to config file.
-            #[arg(long, env = "VMS_CONFIG_WRITE", default_value_t=true)]
+            #[arg(long, env = "VMS_CONFIG_WRITE", default_value_t = true)]
             config_write: bool,
 
-            #[serde(skip, default="_default_command")]
+            #[serde(skip, default = "_default_command")]
             #[command(subcommand)]
             command: Commands,
 
@@ -101,17 +110,13 @@ macro_rules! cli_struct {
         //#[serde(untagged)]
         enum Commands {
             /// Download specified version
-            Download {
-                version: Option<String>,
-            },
+            Download { version: Option<String> },
 
             /// Print out associated environment variables
             Env {},
 
             /// Install specified version
-            Install {
-                version: Option<String>,
-            },
+            Install { version: Option<String> },
 
             /// List what versions are installed
             Ls {},
@@ -120,19 +125,13 @@ macro_rules! cli_struct {
             LsRemote {},
 
             /// Reload specified version
-            Reload {
-                version: Option<String>,
-            },
+            Reload { version: Option<String> },
 
             /// Start specified version
-            Start {
-                version: Option<String>,
-            },
+            Start { version: Option<String> },
 
             /// Stop specified version
-            Stop {
-                version: Option<String>,
-            },
+            Stop { version: Option<String> },
 
             /// Print out database connection string
             Uri {},
@@ -141,7 +140,7 @@ macro_rules! cli_struct {
             InstallService(InstallService),
 
             #[serde(other)]
-            Unknown
+            Unknown,
         }
 
         #[derive(Debug, Args, Serialize, Deserialize)]
@@ -188,6 +187,103 @@ macro_rules! cli_struct {
                 #[arg(long, env = "SERVICE_DESCRIPTION", default_value_t = String::from($about))]
                 service_description: String,
             },
+        }
+
+        pub enum IoOrJsonError {
+            Io { source: std::io::Error },
+            SerdeJson { source: serde_json::Error },
+        }
+
+        impl std::fmt::Display for IoOrJsonError {
+            fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+                match self {
+                    Self::SerdeJson { source } => write!(f, "Serialiser/deserialiser failed: {}", source),
+                    Self::Io { source } => write!(f, "Could not load config: {}", source),
+                }
+            }
+        }
+
+        impl Debug for IoOrJsonError {
+            fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+                match self {
+                    Self::SerdeJson { source } => source.fmt(f),
+                    Self::Io { source } => source.fmt(f),
+                }
+            }
+        }
+
+        impl std::error::Error for IoOrJsonError {
+            fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
+                match self {
+                    Self::Io { source } => Some(source),
+                    Self::SerdeJson { source } => Some(source),
+                }
+            }
+        }
+
+        impl From<std::io::Error> for IoOrJsonError {
+            fn from(source: std::io::Error) -> Self {
+                Self::Io { source }
+            }
+        }
+
+        impl From<serde_json::Error> for IoOrJsonError {
+            fn from(source: serde_json::Error) -> Self {
+                Self::SerdeJson { source }
+            }
+        }
+
+        fn should_write_to_config(args: &Cli) -> bool {
+            if !args.config_write {
+                return false;
+            }
+            match &args.command {
+                Commands::Ls {}
+                | Commands::LsRemote {}
+                | Commands::Uri {}
+                | Commands::Reload { version: _ }
+                | Commands::Stop { version: _ } => false,
+                _ => true,
+            }
+        }
+
+        fn config_file_write(args: &Cli) -> Result<(), IoOrJsonError> {
+            serde_json::to_writer(
+                std::fs::File::create(&args.vms_config).map_err(IoOrJsonError::from)?,
+                &args,
+            )
+            .map_err(IoOrJsonError::from)
+        }
+
+        fn config_from_file(args: &mut Cli) -> Result<Option<Cli>, IoOrJsonError> {
+            let config_path = std::path::Path::new(&args.vms_config);
+            if !args.config_read {
+                return Ok(None);
+            } else if args.vms_config.is_empty()
+                || config_path.components().next()
+                    == Some(std::path::Component::Normal(std::ffi::OsStr::new("$HOME")))
+            {
+                args.config_read = false;
+                return Ok(None);
+            } else if !config_path.is_file() {
+                return Ok(None);
+            }
+            println!("reading from config file {:?}", args.vms_config);
+            return serde_json::from_reader(std::fs::File::open(config_path).map_err(IoOrJsonError::from)?)
+                .map(Some)
+                .map_err(IoOrJsonError::from);
+        }
+
+        fn default_ls_command(args: &Cli) -> Result<(), std::io::Error> {
+            let entries: Vec<std::path::PathBuf> = {
+                let mut _entries = std::fs::read_dir(&args.root)?
+                    .map(|res| res.map(|e| e.path()))
+                    .collect::<Result<Vec<_>, std::io::Error>>()?;
+                _entries.sort();
+                _entries
+            };
+            print!("{:?}", entries);
+            Ok(())
         }
     };
 }
