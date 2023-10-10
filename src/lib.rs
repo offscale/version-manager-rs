@@ -13,7 +13,7 @@ lazy_static! {
 #[macro_export]
 macro_rules! cli_struct_and_helpers {
     ($name:expr, $author:expr, $version:expr, $about:expr) => {
-        use clap::{Args, Parser, Subcommand};
+        use clap::{Args, CommandFactory, Parser, Subcommand};
         use const_format::concatcp;
         use serde::{Deserialize, Serialize};
         use std::fmt::{Debug, Formatter};
@@ -39,6 +39,7 @@ macro_rules! cli_struct_and_helpers {
         #[command(author = $author)]
         #[command(version = $version)]
         #[command(about = $about, long_about = None)]
+        // #[command(propagate_version = true)]
         struct Cli {
             /// Config file to read from. If provided used as new default (before env and argv res).
             #[serde(skip)]
@@ -103,7 +104,7 @@ macro_rules! cli_struct_and_helpers {
         }
 
         fn _default_command() -> Commands {
-            Commands::Unknown
+            Commands::Uri {}
         }
 
         #[derive(Subcommand, Debug, Serialize, Deserialize)]
@@ -138,9 +139,6 @@ macro_rules! cli_struct_and_helpers {
 
             /// Install service (daemon), e.g., systemd, OpenRC, windows-service
             InstallService(InstallService),
-
-            #[serde(other)]
-            Unknown,
         }
 
         #[derive(Debug, Args, Serialize, Deserialize)]
@@ -255,7 +253,7 @@ macro_rules! cli_struct_and_helpers {
             .map_err(IoOrJsonError::from)
         }
 
-        fn config_from_file(args: &mut Cli) -> Result<Option<Cli>, IoOrJsonError> {
+        fn maybe_config_from_file(args: &mut Cli) -> Result<Option<Cli>, IoOrJsonError> {
             let config_path = std::path::Path::new(&args.vms_config);
             if !args.config_read {
                 return Ok(None);
