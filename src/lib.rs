@@ -18,10 +18,14 @@ macro_rules! cli_struct_and_helpers {
         use serde::{Deserialize, Serialize};
         use std::fmt::{Debug, Formatter};
 
-        const ROOT_DEFAULT: &'static str = concatcp!(
+        const VM_ROOT_DEFAULT: &'static str = concatcp!(
             "$HOME",
             std::path::MAIN_SEPARATOR_STR,
-            "version-managers",
+            "version-managers"
+        );
+
+        const ROOT_DEFAULT: &'static str = concatcp!(
+            VM_ROOT_DEFAULT,
             std::path::MAIN_SEPARATOR_STR,
             $name
         );
@@ -61,6 +65,10 @@ macro_rules! cli_struct_and_helpers {
             /// Desired version of application.
             #[arg(long, env = "APP_VERSION", default_value_t = String::from("latest"))]
             app_version: String,
+
+            /// root directory for all version-managers. For download cache and interdependencies.
+            #[arg(long, env = "VM_ROOT", default_value_os_t = std::ffi::OsString::from(VM_ROOT_DEFAULT))]
+            vm_root: std::ffi::OsString,
 
             /// Root directory. By default all paths are relative to this one.
             #[arg(long, env = "ROOT", default_value_os_t = std::ffi::OsString::from(ROOT_DEFAULT))]
