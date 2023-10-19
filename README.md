@@ -67,6 +67,22 @@ In terms of simplifying their usage, your [Dockerfile](https://docs.docker.com/e
 
 It also makes it easier to mix-and-match with hosted services, e.g., swap out self-hosted [PostgreSQL](https://www.postgresql.org) for [Google Cloud](https://cloud.google.com)'s DBaaS [AlloyDB](https://cloud.google.com/alloydb).
 
+Imagine the [CNCF landscape](https://landscape.cncf.io) or any arbitrary stack, and being about to swap out components like:
+
+    |------------|--------
+    | Web server | Proxy |
+    -----------------------------------------
+    | Database | Cache | Queue | Filesystem |
+    -----------------------------------------------------
+    | AI/ML stack | Search engine | Recommender systems |
+    -----------------------------------------------------
+    | Language runtime | Function as a Service |
+    -------------------------------------------
+    | Logging | Alerting | Security scanning |
+    ------------------------------------------
+    | De/provisionioning infrastructure |
+    ------------------------------------
+
 ## This crate
 
 This crate defines the CLI that is then used by all these version managers. All arguments are available in all version managers, however more can be added that are very specific to that version manager. Each of the above will have their own GitHub repository and crate, with binary releases available.
