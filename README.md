@@ -96,30 +96,28 @@ https://github.com/offscale/postgres-version-manager-go
 
 # Command-Line Help for `NAME-manager-rs`
 
-This document contains the help content for the `NAME-manager-rs` command-line program.
-
 **Command Overview:**
 
-* [`NAME-manager-rs`↴](#NAME-manager-rs)
-* [`NAME-manager-rs download`↴](#NAME-manager-rs-download)
-* [`NAME-manager-rs env`↴](#NAME-manager-rs-env)
-* [`NAME-manager-rs install`↴](#NAME-manager-rs-install)
-* [`NAME-manager-rs ls`↴](#NAME-manager-rs-ls)
-* [`NAME-manager-rs ls-remote`↴](#NAME-manager-rs-ls-remote)
-* [`NAME-manager-rs reload`↴](#NAME-manager-rs-reload)
-* [`NAME-manager-rs start`↴](#NAME-manager-rs-start)
-* [`NAME-manager-rs stop`↴](#NAME-manager-rs-stop)
-* [`NAME-manager-rs uri`↴](#NAME-manager-rs-uri)
-* [`NAME-manager-rs install-service`↴](#NAME-manager-rs-install-service)
-* [`NAME-manager-rs install-service open-rc`↴](#NAME-manager-rs-install-service-open-rc)
-* [`NAME-manager-rs install-service systemd`↴](#NAME-manager-rs-install-service-systemd)
-* [`NAME-manager-rs install-service windows-service`↴](#NAME-manager-rs-install-service-windows-service)
+* [`NAME-version-manager-rs`↴](#NAME-version-manager-rs)
+* [`NAME-version-manager-rs download`↴](#NAME-version-manager-rs-download)
+* [`NAME-version-manager-rs env`↴](#NAME-version-manager-rs-env)
+* [`NAME-version-manager-rs install`↴](#NAME-version-manager-rs-install)
+* [`NAME-version-manager-rs ls`↴](#NAME-version-manager-rs-ls)
+* [`NAME-version-manager-rs ls-remote`↴](#NAME-version-manager-rs-ls-remote)
+* [`NAME-version-manager-rs reload`↴](#NAME-version-manager-rs-reload)
+* [`NAME-version-manager-rs start`↴](#NAME-version-manager-rs-start)
+* [`NAME-version-manager-rs stop`↴](#NAME-version-manager-rs-stop)
+* [`NAME-version-manager-rs uri`↴](#NAME-version-manager-rs-uri)
+* [`NAME-version-manager-rs install-service`↴](#NAME-version-manager-rs-install-service)
+* [`NAME-version-manager-rs install-service open-rc`↴](#NAME-version-manager-rs-install-service-open-rc)
+* [`NAME-version-manager-rs install-service systemd`↴](#NAME-version-manager-rs-install-service-systemd)
+* [`NAME-version-manager-rs install-service windows-service`↴](#NAME-version-manager-rs-install-service-windows-service)
 
-## `NAME-manager-rs`
+## `NAME-version-manager-rs`
 
 
 
-**Usage:** `NAME-manager-rs [OPTIONS] --port <PORT> <COMMAND>`
+**Usage:** `NAME-version-manager-rs [OPTIONS] --port <PORT> <COMMAND>`
 
 ###### **Subcommands:**
 
@@ -133,13 +131,12 @@ This document contains the help content for the `NAME-manager-rs` command-line p
 * `stop` — Stop specified version
 * `uri` — Print out database connection string
 * `install-service` — Install service (daemon), e.g., systemd, OpenRC, windows-service
-* `unknown` —
 
 ###### **Options:**
 
 * `--vms-config <VMS_CONFIG>` — Config file to read from. If provided used as new default (before env and argv res)
 
-  Default value: `$HOME/version-managers/NAME-manager-rs/vms-config.json`
+  Default value: `$HOME/version-managers/NAME-version-manager-rs/vms-config.json`
 * `--config-read` — Whether to read from config file. If vms_config provided, this defaults to `true`
 
   Default value: `false`
@@ -149,9 +146,12 @@ This document contains the help content for the `NAME-manager-rs` command-line p
 * `--app-version <APP_VERSION>` — Desired version of application
 
   Default value: `latest`
+* `--vm-root <VM_ROOT>` — root directory for all version-managers. For download cache and interdependencies
+
+  Default value: `$HOME/version-managers`
 * `--root <ROOT>` — Root directory. By default all paths are relative to this one
 
-  Default value: `$HOME/version-managers/NAME-manager-rs`
+  Default value: `$HOME/version-managers/NAME-version-manager-rs`
 * `--hostname <HOSTNAME>` — Hostname of server
 
   Default value: `localhost`
@@ -159,18 +159,18 @@ This document contains the help content for the `NAME-manager-rs` command-line p
 * `--database <DATABASE>` — Database name
 
   Default value: `database`
-* `--runtime-path <RUNTIME_PATH>` — Runtime path. This is where PID files and/or similar temporary files are stored.
+* `--runtime-path <RUNTIME_PATH>` — Runtime path. This is where PID files and/or similar temporary files are stored
 
-  Default value: `$HOME/version-managers/NAME-manager-rs/NAME-manager-rs/$APP_VERSION/run`
+  Default value: `$HOME/version-managers/NAME-version-manager-rs/NAME-version-manager-rs/$APP_VERSION/run`
 * `--data-path <DATA_PATH>` — Data path. This is where the actual data is stored, e.g., the .db and WAL files
 
-  Default value: `$HOME/version-managers/NAME-manager-rs/NAME-manager-rs/$APP_VERSION/data`
+  Default value: `$HOME/version-managers/NAME-version-manager-rs/NAME-version-manager-rs/$APP_VERSION/data`
 * `--bin-path <BIN_PATH>` — Binary path. Where the executable binary are located. Sometimes called PREFIX
 
-  Default value: `$HOME/version-managers/NAME-manager-rs/NAME-manager-rs/$APP_VERSION/bin`
+  Default value: `$HOME/version-managers/NAME-version-manager-rs/NAME-version-manager-rs/$APP_VERSION/bin`
 * `--logs-path <LOGS_PATH>` — Logs path. Where the log files are to be stored
 
-  Default value: `$HOME/version-managers/NAME-manager-rs/NAME-manager-rs/$APP_VERSION/logs`
+  Default value: `$HOME/version-managers/NAME-version-manager-rs/NAME-version-manager-rs/$APP_VERSION/logs`
 * `--locale <LOCALE>` — Locale to use
 
   Default value: `en_US.UTF-8`
@@ -178,11 +178,11 @@ This document contains the help content for the `NAME-manager-rs` command-line p
 
 
 
-## `NAME-manager-rs download`
+## `NAME-version-manager-rs download`
 
 Download specified version
 
-**Usage:** `NAME-manager-rs download [VERSION]`
+**Usage:** `NAME-version-manager-rs download [VERSION]`
 
 ###### **Arguments:**
 
@@ -190,19 +190,19 @@ Download specified version
 
 
 
-## `NAME-manager-rs env`
+## `NAME-version-manager-rs env`
 
 Print out associated environment variables
 
-**Usage:** `NAME-manager-rs env`
+**Usage:** `NAME-version-manager-rs env`
 
 
 
-## `NAME-manager-rs install`
+## `NAME-version-manager-rs install`
 
 Install specified version
 
-**Usage:** `NAME-manager-rs install [VERSION]`
+**Usage:** `NAME-version-manager-rs install [VERSION]`
 
 ###### **Arguments:**
 
@@ -210,27 +210,27 @@ Install specified version
 
 
 
-## `NAME-manager-rs ls`
+## `NAME-version-manager-rs ls`
 
 List what versions are installed
 
-**Usage:** `NAME-manager-rs ls`
+**Usage:** `NAME-version-manager-rs ls`
 
 
 
-## `NAME-manager-rs ls-remote`
+## `NAME-version-manager-rs ls-remote`
 
 List what versions are available
 
-**Usage:** `NAME-manager-rs ls-remote`
+**Usage:** `NAME-version-manager-rs ls-remote`
 
 
 
-## `NAME-manager-rs reload`
+## `NAME-version-manager-rs reload`
 
 Reload specified version
 
-**Usage:** `NAME-manager-rs reload [VERSION]`
+**Usage:** `NAME-version-manager-rs reload [VERSION]`
 
 ###### **Arguments:**
 
@@ -238,11 +238,11 @@ Reload specified version
 
 
 
-## `NAME-manager-rs start`
+## `NAME-version-manager-rs start`
 
 Start specified version
 
-**Usage:** `NAME-manager-rs start [VERSION]`
+**Usage:** `NAME-version-manager-rs start [VERSION]`
 
 ###### **Arguments:**
 
@@ -250,11 +250,11 @@ Start specified version
 
 
 
-## `NAME-manager-rs stop`
+## `NAME-version-manager-rs stop`
 
 Stop specified version
 
-**Usage:** `NAME-manager-rs stop [VERSION]`
+**Usage:** `NAME-version-manager-rs stop [VERSION]`
 
 ###### **Arguments:**
 
@@ -262,19 +262,19 @@ Stop specified version
 
 
 
-## `NAME-manager-rs uri`
+## `NAME-version-manager-rs uri`
 
 Print out database connection string
 
-**Usage:** `NAME-manager-rs uri`
+**Usage:** `NAME-version-manager-rs uri`
 
 
 
-## `NAME-manager-rs install-service`
+## `NAME-version-manager-rs install-service`
 
 Install service (daemon), e.g., systemd, OpenRC, windows-service
 
-**Usage:** `NAME-manager-rs install-service
+**Usage:** `NAME-version-manager-rs install-service
 install-service <COMMAND>`
 
 ###### **Subcommands:**
@@ -285,71 +285,63 @@ install-service <COMMAND>`
 
 
 
-## `NAME-manager-rs install-service open-rc`
+## `NAME-version-manager-rs install-service open-rc`
 
 Install OpenRC service
 
-**Usage:** `NAME-manager-rs install-service open-rc [OPTIONS]`
+**Usage:** `NAME-version-manager-rs install-service open-rc [OPTIONS]`
 
 ###### **Options:**
 
 * `--group <GROUP>`
 
-  Default value: `NAME-manager-rs`
+  Default value: `NAME-version-manager-rs`
 * `--config-install-path <CONFIG_INSTALL_PATH>`
 
-  Default value: `/etc/conf.d/NAME-manager-rs`
+  Default value: `/etc/conf.d/NAME-version-manager-rs`
 * `--service-install-path <SERVICE_INSTALL_PATH>`
 
-  Default value: `/etc/init.d/NAME-manager-rs`
+  Default value: `/etc/init.d/NAME-version-manager-rs`
 * `--user <USER>`
 
-  Default value: `NAME-manager-rs`
+  Default value: `NAME-version-manager-rs`
 
 
 
-## `NAME-manager-rs install-service systemd`
+## `NAME-version-manager-rs install-service systemd`
 
 Install systemd service
 
-**Usage:** `NAME-manager-rs install-service systemd [OPTIONS]`
+**Usage:** `NAME-version-manager-rs install-service systemd [OPTIONS]`
 
 ###### **Options:**
 
 * `--group <GROUP>`
 
-  Default value: `NAME-manager-rs`
+  Default value: `NAME-version-manager-rs`
 * `--service-install-path <SERVICE_INSTALL_PATH>`
 
-  Default value: `/etc/systemd/system/NAME-manager-rs.service`
+  Default value: `/etc/systemd/system/NAME-version-manager-rs.service`
 * `--user <USER>`
 
-  Default value: `NAME-manager-rs`
+  Default value: `NAME-version-manager-rs`
 
 
 
-## `NAME-manager-rs install-service windows-service`
+## `NAME-version-manager-rs install-service windows-service`
 
 Install Windows Service
 
-**Usage:** `NAME-manager-rs install-service windows-service [OPTIONS]`
+**Usage:** `NAME-version-manager-rs install-service windows-service [OPTIONS]`
 
 ###### **Options:**
 
 * `--service-name <SERVICE_NAME>`
 
-  Default value: `NAME-manager-rs`
+  Default value: `NAME-version-manager-rs`
 * `--service-description <SERVICE_DESCRIPTION>`
 
   Default value: ``
-
-
-
-## `NAME-manager-rs unknown`
-
-**Usage:** `NAME-manager-rs unknown`
-
-
 
 <hr/>
 

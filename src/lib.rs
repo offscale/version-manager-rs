@@ -195,101 +195,111 @@ macro_rules! cli_struct_and_helpers {
             },
         }
 
-        pub enum IoOrJsonError {
-            Io { source: std::io::Error },
-            SerdeJson { source: serde_json::Error },
-        }
+        pub(crate) mod Errors {
+            pub(crate) enum IoOrJsonError {
+                Io { source: std::io::Error },
+                SerdeJson { source: serde_json::Error },
+            }
 
-        impl std::fmt::Display for IoOrJsonError {
-            fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-                match self {
-                    Self::SerdeJson { source } => write!(f, "Serialiser/deserialiser failed: {}", source),
-                    Self::Io { source } => write!(f, "Could not load config: {}", source),
+            impl std::fmt::Display for IoOrJsonError {
+                fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+                    match self {
+                        Self::SerdeJson { source } => write!(f, "Serialiser/deserialiser failed: {}", source),
+                        Self::Io { source } => write!(f, "Could not load config: {}", source),
+                    }
+                }
+            }
+
+            impl std::fmt::Debug for IoOrJsonError {
+                fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+                    match self {
+                        Self::SerdeJson { source } => source.fmt(f),
+                        Self::Io { source } => source.fmt(f),
+                    }
+                }
+            }
+
+            impl std::error::Error for IoOrJsonError {
+                fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
+                    match self {
+                        Self::Io { source } => Some(source),
+                        Self::SerdeJson { source } => Some(source),
+                    }
+                }
+            }
+
+            impl From<std::io::Error> for IoOrJsonError {
+                fn from(source: std::io::Error) -> Self {
+                    Self::Io { source }
+                }
+            }
+
+            impl From<serde_json::Error> for IoOrJsonError {
+                fn from(source: serde_json::Error) -> Self {
+                    Self::SerdeJson { source }
                 }
             }
         }
 
-        impl Debug for IoOrJsonError {
-            fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-                match self {
-                    Self::SerdeJson { source } => source.fmt(f),
-                    Self::Io { source } => source.fmt(f),
+        pub(crate) mod CommandFuncs {
+            use crate::Cli;
+            pub(crate) fn default_ls_command(args: &Cli) -> Result<(), std::io::Error> {
+                let entries: Vec<std::path::PathBuf> = {
+                    let mut _entries = std::fs::read_dir(&args.root)?
+                        .map(|res| res.map(|e| e.path()))
+                        .collect::<Result<Vec<_>, std::io::Error>>()?;
+                    _entries.sort();
+                    _entries
+                };
+                print!("{:?}", entries);
+                Ok(())
+            }
+        }
+
+        pub(crate) mod ConfigFuncs {
+            use crate::{Cli,Commands};
+            use crate::Errors::IoOrJsonError;
+            pub(crate) fn should_write_to_config(args: &Cli) -> bool {
+                if !args.config_write {
+                    return false;
+                }
+                match &args.command {
+                    Commands::Ls {}
+                    | Commands::LsRemote {}
+                    | Commands::Uri {}
+                    | Commands::Reload { version: _ }
+                    | Commands::Stop { version: _ } => false,
+                    _ => true,
                 }
             }
-        }
 
-        impl std::error::Error for IoOrJsonError {
-            fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
-                match self {
-                    Self::Io { source } => Some(source),
-                    Self::SerdeJson { source } => Some(source),
-                }
+            pub(crate) fn config_file_write(args: &Cli) -> Result<(), IoOrJsonError> {
+                serde_json::to_writer(
+                    std::fs::File::create(&args.vms_config).map_err(IoOrJsonError::from)?,
+                    &args,
+                )
+                    .map_err(IoOrJsonError::from)
             }
-        }
 
-        impl From<std::io::Error> for IoOrJsonError {
-            fn from(source: std::io::Error) -> Self {
-                Self::Io { source }
-            }
-        }
-
-        impl From<serde_json::Error> for IoOrJsonError {
-            fn from(source: serde_json::Error) -> Self {
-                Self::SerdeJson { source }
-            }
-        }
-
-        fn should_write_to_config(args: &Cli) -> bool {
-            if !args.config_write {
-                return false;
-            }
-            match &args.command {
-                Commands::Ls {}
-                | Commands::LsRemote {}
-                | Commands::Uri {}
-                | Commands::Reload { version: _ }
-                | Commands::Stop { version: _ } => false,
-                _ => true,
-            }
-        }
-
-        fn config_file_write(args: &Cli) -> Result<(), IoOrJsonError> {
-            serde_json::to_writer(
-                std::fs::File::create(&args.vms_config).map_err(IoOrJsonError::from)?,
-                &args,
-            )
-            .map_err(IoOrJsonError::from)
-        }
-
-        fn maybe_config_from_file(args: &mut Cli) -> Result<Option<Cli>, IoOrJsonError> {
-            let config_path = std::path::Path::new(&args.vms_config);
-            if !args.config_read {
-                return Ok(None);
-            } else if args.vms_config.is_empty()
-                || config_path.components().next()
+            pub(crate) fn maybe_config_from_file(args: &mut Cli) -> Result<Option<Cli>, IoOrJsonError> {
+                let config_path = std::path::Path::new(&args.vms_config);
+                if !args.config_read {
+                    return Ok(None);
+                } else if args.vms_config.is_empty()
+                    || config_path.components().next()
                     == Some(std::path::Component::Normal(std::ffi::OsStr::new("$HOME")))
-            {
-                args.config_read = false;
-                return Ok(None);
-            } else if !config_path.is_file() {
-                return Ok(None);
+                {
+                    args.config_read = false;
+                    return Ok(None);
+                } else if !config_path.is_file() {
+                    return Ok(None);
+                }
+                println!("reading from config file {:?}", args.vms_config);
+                return serde_json::from_reader(std::fs::File::open(config_path).map_err(IoOrJsonError::from)?)
+                    .map(Some)
+                    .map_err(IoOrJsonError::from);
             }
-            println!("reading from config file {:?}", args.vms_config);
-            return serde_json::from_reader(std::fs::File::open(config_path).map_err(IoOrJsonError::from)?)
-                .map(Some)
-                .map_err(IoOrJsonError::from);
-        }
-
-        fn default_ls_command(args: &Cli) -> Result<(), std::io::Error> {
-            let entries: Vec<std::path::PathBuf> = {
-                let mut _entries = std::fs::read_dir(&args.root)?
-                    .map(|res| res.map(|e| e.path()))
-                    .collect::<Result<Vec<_>, std::io::Error>>()?;
-                _entries.sort();
-                _entries
-            };
-            print!("{:?}", entries);
-            Ok(())
         }
     };
 }
+
