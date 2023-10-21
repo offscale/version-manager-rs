@@ -2,6 +2,7 @@
 /// depending on argument, it will create one of two variants:
 /// 0. version manager for a package (mirror location, version, env vars, …)
 /// 1. version manager for a service (daemon, port, hostname, …); also includes ↑
+
 /*#[macro_use]
 extern crate lazy_static;
 
@@ -13,23 +14,13 @@ lazy_static! {
 #[macro_export]
 macro_rules! cli_struct_and_helpers {
     ($name:expr, $author:expr, $version:expr, $about:expr) => {
-        use clap::{Args, CommandFactory, Parser, Subcommand};
+        use clap::{CommandFactory, Parser};
         use const_format::concatcp;
-        use serde::{Deserialize, Serialize};
-        use std::fmt::{Debug, Formatter};
 
-        const VM_ROOT_DEFAULT: &'static str = concatcp!(
-            "$HOME",
-            std::path::MAIN_SEPARATOR_STR,
-            "version-managers"
-        );
-
+        const VM_ROOT_DEFAULT: &'static str =
+            concatcp!("$HOME", std::path::MAIN_SEPARATOR_STR, "version-managers");
         const ROOT_DEFAULT: &'static str = concatcp!(
-            VM_ROOT_DEFAULT,
-            std::path::MAIN_SEPARATOR_STR,
-            $name
-        );
-
+            VM_ROOT_DEFAULT, std::path::MAIN_SEPARATOR_STR, $name);
         const VERSIONED_ROOT_DEFAULT: &'static str = concatcp!(
             ROOT_DEFAULT,
             std::path::MAIN_SEPARATOR_STR,
@@ -38,19 +29,20 @@ macro_rules! cli_struct_and_helpers {
             "$APP_VERSION"
         );
 
-        #[derive(Parser, Serialize, Deserialize, Debug)]
+        #[derive(clap::Parser, serde::Serialize, serde::Deserialize, std::fmt::Debug)]
         #[command(name = $name)]
         #[command(author = $author)]
         #[command(version = $version)]
         #[command(about = $about, long_about = None)]
-        // #[command(propagate_version = true)]
         struct Cli {
             /// Config file to read from. If provided used as new default (before env and argv res).
             #[serde(skip)]
-            #[arg(long, env = "VMS_CONFIG", default_value_os_t =  std::ffi::OsString::from(concatcp!(ROOT_DEFAULT, std::path::MAIN_SEPARATOR_STR, "vms-config.json")))]
+            #[arg(long, env = "VMS_CONFIG",
+                  default_value_os_t = std::ffi::OsString::from(
+                      concatcp!(ROOT_DEFAULT, std::path::MAIN_SEPARATOR_STR, "vms-config.json")))]
             vms_config: std::ffi::OsString,
 
-            /// Whether to read from config file. If vms_config provided, this defaults to `true`.
+            /// Whether to read from config file. If vms_config provided, this defaults to  `true` .
             #[arg(long, env = "VMS_CONFIG_READ", default_value_t = false)]
             config_read: bool,
 
@@ -67,7 +59,8 @@ macro_rules! cli_struct_and_helpers {
             app_version: String,
 
             /// root directory for all version-managers. For download cache and interdependencies.
-            #[arg(long, env = "VM_ROOT", default_value_os_t = std::ffi::OsString::from(VM_ROOT_DEFAULT))]
+            #[arg(long, env = "VM_ROOT",
+                  default_value_os_t = std::ffi::OsString::from(VM_ROOT_DEFAULT))]
             vm_root: std::ffi::OsString,
 
             /// Root directory. By default all paths are relative to this one.
@@ -87,19 +80,23 @@ macro_rules! cli_struct_and_helpers {
             database: String,
 
             /// Runtime path. This is where PID files and/or similar temporary files are stored.
-            #[arg(long, env = "RUNTIME_PATH", default_value_os_t =  std::ffi::OsString::from(concatcp!(VERSIONED_ROOT_DEFAULT, std::path::MAIN_SEPARATOR_STR, "run")))]
+            #[arg(long, env = "RUNTIME_PATH", default_value_os_t = std::ffi::OsString::from(
+                      concatcp!(VERSIONED_ROOT_DEFAULT, std::path::MAIN_SEPARATOR_STR, "run")))]
             runtime_path: std::ffi::OsString,
 
             /// Data path. This is where the actual data is stored, e.g., the .db and WAL files.
-            #[arg(long, env = "DATA_PATH", default_value_os_t = std::ffi::OsString::from(concatcp!(VERSIONED_ROOT_DEFAULT, std::path::MAIN_SEPARATOR_STR, "data")))]
+            #[arg(long, env = "DATA_PATH", default_value_os_t = std::ffi::OsString::from(
+                      concatcp!(VERSIONED_ROOT_DEFAULT, std::path::MAIN_SEPARATOR_STR, "data")))]
             data_path: std::ffi::OsString,
 
             /// Binary path. Where the executable binary are located. Sometimes called PREFIX.
-            #[arg(long, env = "BIN_PATH", default_value_os_t = std::ffi::OsString::from(concatcp!(VERSIONED_ROOT_DEFAULT, std::path::MAIN_SEPARATOR_STR, "bin")))]
+            #[arg(long, env = "BIN_PATH", default_value_os_t = std::ffi::OsString::from(
+                       concatcp!(VERSIONED_ROOT_DEFAULT, std::path::MAIN_SEPARATOR_STR, "bin")))]
             bin_path: std::ffi::OsString,
 
             /// Logs path. Where the log files are to be stored.
-            #[arg(long, env = "LOGS_PATH", default_value_os_t = std::ffi::OsString::from(concatcp!(VERSIONED_ROOT_DEFAULT, std::path::MAIN_SEPARATOR_STR, "logs")))]
+            #[arg(long, env = "LOGS_PATH", default_value_os_t = std::ffi::OsString::from(
+                       concatcp!(VERSIONED_ROOT_DEFAULT, std::path::MAIN_SEPARATOR_STR, "logs")))]
             logs_path: std::ffi::OsString,
 
             /// Locale to use.
@@ -111,12 +108,12 @@ macro_rules! cli_struct_and_helpers {
             markdown_help: bool,
         }
 
+        /// default command; needed for serde (even though serde ignores this field)
         fn _default_command() -> Commands {
             Commands::Uri {}
         }
 
-        #[derive(Subcommand, Debug, Serialize, Deserialize)]
-        //#[serde(untagged)]
+        #[derive(clap::Subcommand, std::fmt::Debug, serde::Serialize, serde::Deserialize)]
         enum Commands {
             /// Download specified version
             Download { version: Option<String> },
@@ -126,6 +123,12 @@ macro_rules! cli_struct_and_helpers {
 
             /// Install specified version
             Install { version: Option<String> },
+
+            /// Install (only) dependencies for specified version
+            InstallDependencies { version: Option<String> },
+
+            /// Install service (daemon), e.g., systemd, OpenRC, windows-service
+            InstallService(InstallService),
 
             /// List what versions are installed
             Ls {},
@@ -144,58 +147,72 @@ macro_rules! cli_struct_and_helpers {
 
             /// Print out database connection string
             Uri {},
-
-            /// Install service (daemon), e.g., systemd, OpenRC, windows-service
-            InstallService(InstallService),
         }
 
-        #[derive(Debug, Args, Serialize, Deserialize)]
+        #[derive(std::fmt::Debug, clap::Args, serde::Serialize, serde::Deserialize)]
         #[command(args_conflicts_with_subcommands = true)]
         struct InstallService {
+            /// Install service (daemon), e.g., systemd, OpenRC, windows-service
             #[command(subcommand)]
             command: InstallServiceCommands,
         }
 
-        #[derive(Debug, Subcommand, Serialize, Deserialize)]
+        #[derive(std::fmt::Debug, clap::Subcommand, serde::Serialize, serde::Deserialize)]
         enum InstallServiceCommands {
             /// Install OpenRC service
             OpenRc {
+                /// user group to run service as
                 #[arg(long, env = "GROUP", default_value_t = String::from($name))]
                 group: String,
 
-                #[arg(long, env = "CONFIG_INSTALL_PATH", default_value_os_t = std::ffi::OsString::from(concat!("/etc/conf.d/", $name)))]
+                /// where to install the config file
+                #[arg(long, env = "CONFIG_INSTALL_PATH",
+                      default_value_os_t = std::ffi::OsString::from(concat!("/etc/conf.d/", $name))
+                     )]
                 config_install_path: std::ffi::OsString,
 
-                #[arg(long, env = "SERVICE_INSTALL_PATH", default_value_os_t = std::ffi::OsString::from(concat!("/etc/init.d/", $name)))]
+                /// where to install the service file
+                #[arg(long, env = "SERVICE_INSTALL_PATH",
+                      default_value_os_t = std::ffi::OsString::from(concat!("/etc/init.d/", $name))
+                     )]
                 service_install_path: std::ffi::OsString,
 
+                /// user to run service as
                 #[arg(long, env = "USER", default_value_t = String::from($name))]
                 user: String,
             },
 
             /// Install systemd service
             Systemd {
+                /// user group to run service as
                 #[arg(long, env = "GROUP", default_value_t = String::from($name))]
                 group: String,
 
-                #[arg(long, env = "SERVICE_INSTALL_PATH", default_value_os_t = std::ffi::OsString::from(concat!("/etc/systemd/system/", $name, ".service")))]
+                /// where to install the service file
+                #[arg(long, env = "SERVICE_INSTALL_PATH",
+                      default_value_os_t = std::ffi::OsString::from(concat!("/etc/systemd/system/",
+                                                                            $name, ".service")))]
                 service_install_path: std::ffi::OsString,
 
+                /// user to run service as
                 #[arg(long, env = "USER", default_value_t = String::from($name))]
                 user: String,
             },
 
             /// Install Windows Service
             WindowsService {
+                /// name of service
                 #[arg(long, env = "SERVICE_NAME", default_value_t = String::from($name))]
                 service_name: String,
 
+                /// description of service
                 #[arg(long, env = "SERVICE_DESCRIPTION", default_value_t = String::from($about))]
                 service_description: String,
             },
         }
 
-        pub(crate) mod Errors {
+        /// Common errors
+        pub(crate) mod errors {
             pub(crate) enum IoOrJsonError {
                 Io { source: std::io::Error },
                 SerdeJson { source: serde_json::Error },
@@ -204,7 +221,9 @@ macro_rules! cli_struct_and_helpers {
             impl std::fmt::Display for IoOrJsonError {
                 fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
                     match self {
-                        Self::SerdeJson { source } => write!(f, "Serialiser/deserialiser failed: {}", source),
+                        Self::SerdeJson { source } => {
+                            write!(f, "Serialiser/deserialiser failed: {}", source)
+                        }
                         Self::Io { source } => write!(f, "Could not load config: {}", source),
                     }
                 }
@@ -241,8 +260,10 @@ macro_rules! cli_struct_and_helpers {
             }
         }
 
-        pub(crate) mod CommandFuncs {
+        /// Default commands to use or copy the interface of for ones own implementation
+        pub(crate) mod command {
             use crate::Cli;
+
             pub(crate) fn default_ls_command(args: &Cli) -> Result<(), std::io::Error> {
                 let entries: Vec<std::path::PathBuf> = {
                     let mut _entries = std::fs::read_dir(&args.root)?
@@ -256,9 +277,11 @@ macro_rules! cli_struct_and_helpers {
             }
         }
 
-        pub(crate) mod ConfigFuncs {
-            use crate::{Cli,Commands};
-            use crate::Errors::IoOrJsonError;
+        /// Config helper functions
+        pub(crate) mod config {
+            use crate::errors::IoOrJsonError;
+            use crate::{Cli, Commands};
+
             pub(crate) fn should_write_to_config(args: &Cli) -> bool {
                 if !args.config_write {
                     return false;
@@ -278,7 +301,15 @@ macro_rules! cli_struct_and_helpers {
                     std::fs::File::create(&args.vms_config).map_err(IoOrJsonError::from)?,
                     &args,
                 )
-                    .map_err(IoOrJsonError::from)
+                .map_err(IoOrJsonError::from)
+            }
+
+            pub(crate) fn maybe_config_file_write(args: &Cli) -> Result<(), IoOrJsonError> {
+                if config::should_write_to_config(&args) {
+                    config::config_file_write(&args)
+                } else {
+                    Ok(())
+                }
             }
 
             pub(crate) fn maybe_config_from_file(args: &mut Cli) -> Result<Option<Cli>, IoOrJsonError> {
@@ -287,7 +318,7 @@ macro_rules! cli_struct_and_helpers {
                     return Ok(None);
                 } else if args.vms_config.is_empty()
                     || config_path.components().next()
-                    == Some(std::path::Component::Normal(std::ffi::OsStr::new("$HOME")))
+                        == Some(std::path::Component::Normal(std::ffi::OsStr::new("$HOME")))
                 {
                     args.config_read = false;
                     return Ok(None);
@@ -295,11 +326,12 @@ macro_rules! cli_struct_and_helpers {
                     return Ok(None);
                 }
                 println!("reading from config file {:?}", args.vms_config);
-                return serde_json::from_reader(std::fs::File::open(config_path).map_err(IoOrJsonError::from)?)
-                    .map(Some)
-                    .map_err(IoOrJsonError::from);
+                return serde_json::from_reader(
+                    std::fs::File::open(config_path).map_err(IoOrJsonError::from)?,
+                )
+                .map(Some)
+                .map_err(IoOrJsonError::from);
             }
         }
     };
 }
-
