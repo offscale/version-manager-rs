@@ -94,50 +94,54 @@ https://github.com/offscale/postgres-version-manager-go
 
   - MariaDB - https://github.com/offscale/mariadb-version-manager-rs
 
-# Command-Line Help for `NAME-manager-rs`
+# Command-Line Help for `NAME-version-manager-rs`
+
+This document contains the help content for the `NAME-version-manager-rs` command-line program.
 
 **Command Overview:**
 
 * [`NAME-version-manager-rs`↴](#NAME-version-manager-rs)
 * [`NAME-version-manager-rs download`↴](#NAME-version-manager-rs-download)
+* [`NAME-version-manager-rs download-plan`↴](#NAME-version-manager-rs-download-plan)
 * [`NAME-version-manager-rs env`↴](#NAME-version-manager-rs-env)
 * [`NAME-version-manager-rs install`↴](#NAME-version-manager-rs-install)
+* [`NAME-version-manager-rs install-dependencies`↴](#NAME-version-manager-rs-install-dependencies)
 * [`NAME-version-manager-rs ls`↴](#NAME-version-manager-rs-ls)
 * [`NAME-version-manager-rs ls-remote`↴](#NAME-version-manager-rs-ls-remote)
-* [`NAME-version-manager-rs reload`↴](#NAME-version-manager-rs-reload)
-* [`NAME-version-manager-rs start`↴](#NAME-version-manager-rs-start)
-* [`NAME-version-manager-rs stop`↴](#NAME-version-manager-rs-stop)
 * [`NAME-version-manager-rs uri`↴](#NAME-version-manager-rs-uri)
-* [`NAME-version-manager-rs install-service`↴](#NAME-version-manager-rs-install-service)
-* [`NAME-version-manager-rs install-service open-rc`↴](#NAME-version-manager-rs-install-service-open-rc)
-* [`NAME-version-manager-rs install-service systemd`↴](#NAME-version-manager-rs-install-service-systemd)
-* [`NAME-version-manager-rs install-service windows-service`↴](#NAME-version-manager-rs-install-service-windows-service)
+* [`NAME-version-manager-rs service`↴](#NAME-version-manager-rs-service)
+* [`NAME-version-manager-rs service install`↴](#NAME-version-manager-rs-service-install)
+* [`NAME-version-manager-rs service install open-rc`↴](#NAME-version-manager-rs-service-install-open-rc)
+* [`NAME-version-manager-rs service install systemd`↴](#NAME-version-manager-rs-service-install-systemd)
+* [`NAME-version-manager-rs service install windows-service`↴](#NAME-version-manager-rs-service-install-windows-service)
+* [`NAME-version-manager-rs service reload`↴](#NAME-version-manager-rs-service-reload)
+* [`NAME-version-manager-rs service start`↴](#NAME-version-manager-rs-service-start)
+* [`NAME-version-manager-rs service stop`↴](#NAME-version-manager-rs-service-stop)
 
 ## `NAME-version-manager-rs`
 
 
 
-**Usage:** `NAME-version-manager-rs [OPTIONS] --port <PORT> <COMMAND>`
+**Usage:** `NAME-version-manager-rs [OPTIONS] <COMMAND>`
 
 ###### **Subcommands:**
 
 * `download` — Download specified version
+* `download-plan` — Resolve download URL and hash/checksum. Useful for security and concurrency.
 * `env` — Print out associated environment variables
 * `install` — Install specified version
+* `install-dependencies` — Install (only) dependencies for specified version
 * `ls` — List what versions are installed
 * `ls-remote` — List what versions are available
-* `reload` — Reload specified version
-* `start` — Start specified version
-* `stop` — Stop specified version
 * `uri` — Print out database connection string
-* `install-service` — Install service (daemon), e.g., systemd, OpenRC, windows-service
+* `service` — Service management
 
 ###### **Options:**
 
 * `--vms-config <VMS_CONFIG>` — Config file to read from. If provided used as new default (before env and argv res)
 
   Default value: `$HOME/version-managers/NAME-version-manager-rs/vms-config.json`
-* `--config-read` — Whether to read from config file. If vms_config provided, this defaults to `true`
+* `--config-read` — Whether to read from config file. If vms_config provided, this defaults to  `true`
 
   Default value: `false`
 * `--config-write` — Whether to write to config file
@@ -156,6 +160,7 @@ https://github.com/offscale/postgres-version-manager-go
 
   Default value: `localhost`
 * `-p`, `--port <PORT>` — Port for server to listen on
+
 * `--database <DATABASE>` — Database name
 
   Default value: `database`
@@ -186,7 +191,19 @@ Download specified version
 
 ###### **Arguments:**
 
-* `<VERSION>`
+* `<VERSION>` — version to install, defaults to global arg if provided otherwise env var
+
+
+
+## `NAME-version-manager-rs download-plan`
+
+Resolve download URL and hash/checksum. Useful for security and concurrency.
+
+**Usage:** `NAME-version-manager-rs download-plan [VERSION]`
+
+###### **Arguments:**
+
+* `<VERSION>` — version to install, defaults to global arg if provided otherwise env var
 
 
 
@@ -202,11 +219,24 @@ Print out associated environment variables
 
 Install specified version
 
-**Usage:** `NAME-version-manager-rs install [VERSION]`
+**Usage:** `NAME-version-manager-rs install [VERSION] [SKIP_DEPENDENCIES]...`
 
 ###### **Arguments:**
 
-* `<VERSION>`
+* `<VERSION>` — version to install, defaults to global arg if provided otherwise env var
+* `<SKIP_DEPENDENCIES>` — dependencies to skip installation of, defaults to install all. Skip all with *
+
+
+
+## `NAME-version-manager-rs install-dependencies`
+
+Install (only) dependencies for specified version
+
+**Usage:** `NAME-version-manager-rs install-dependencies [VERSION]`
+
+###### **Arguments:**
+
+* `<VERSION>` — version to install, defaults to global arg if provided otherwise env var
 
 
 
@@ -226,42 +256,6 @@ List what versions are available
 
 
 
-## `NAME-version-manager-rs reload`
-
-Reload specified version
-
-**Usage:** `NAME-version-manager-rs reload [VERSION]`
-
-###### **Arguments:**
-
-* `<VERSION>`
-
-
-
-## `NAME-version-manager-rs start`
-
-Start specified version
-
-**Usage:** `NAME-version-manager-rs start [VERSION]`
-
-###### **Arguments:**
-
-* `<VERSION>`
-
-
-
-## `NAME-version-manager-rs stop`
-
-Stop specified version
-
-**Usage:** `NAME-version-manager-rs stop [VERSION]`
-
-###### **Arguments:**
-
-* `<VERSION>`
-
-
-
 ## `NAME-version-manager-rs uri`
 
 Print out database connection string
@@ -270,12 +264,27 @@ Print out database connection string
 
 
 
-## `NAME-version-manager-rs install-service`
+## `NAME-version-manager-rs service`
+
+Service management
+
+**Usage:** `NAME-version-manager-rs service <COMMAND>`
+
+###### **Subcommands:**
+
+* `install` — Install service (daemon), e.g., systemd, OpenRC, windows-service
+* `reload` — Reload specified version
+* `start` — Start specified version
+* `stop` — Stop specified version
+
+
+
+## `NAME-version-manager-rs service install`
 
 Install service (daemon), e.g., systemd, OpenRC, windows-service
 
-**Usage:** `NAME-version-manager-rs install-service
-install-service <COMMAND>`
+**Usage:** `NAME-version-manager-rs service install
+install <COMMAND>`
 
 ###### **Subcommands:**
 
@@ -285,63 +294,101 @@ install-service <COMMAND>`
 
 
 
-## `NAME-version-manager-rs install-service open-rc`
+## `NAME-version-manager-rs service install open-rc`
 
 Install OpenRC service
 
-**Usage:** `NAME-version-manager-rs install-service open-rc [OPTIONS]`
+**Usage:** `NAME-version-manager-rs service install open-rc [OPTIONS]`
 
 ###### **Options:**
 
-* `--group <GROUP>`
+* `--group <GROUP>` — user group to run service as
 
   Default value: `NAME-version-manager-rs`
-* `--config-install-path <CONFIG_INSTALL_PATH>`
+* `--config-install-path <CONFIG_INSTALL_PATH>` — where to install the config file
 
   Default value: `/etc/conf.d/NAME-version-manager-rs`
-* `--service-install-path <SERVICE_INSTALL_PATH>`
+* `--service-install-path <SERVICE_INSTALL_PATH>` — where to install the service file
 
   Default value: `/etc/init.d/NAME-version-manager-rs`
-* `--user <USER>`
+* `--user <USER>` — user to run service as
 
   Default value: `NAME-version-manager-rs`
 
 
 
-## `NAME-version-manager-rs install-service systemd`
+## `NAME-version-manager-rs service install systemd`
 
 Install systemd service
 
-**Usage:** `NAME-version-manager-rs install-service systemd [OPTIONS]`
+**Usage:** `NAME-version-manager-rs service install systemd [OPTIONS]`
 
 ###### **Options:**
 
-* `--group <GROUP>`
+* `--group <GROUP>` — user group to run service as
 
   Default value: `NAME-version-manager-rs`
-* `--service-install-path <SERVICE_INSTALL_PATH>`
+* `--service-install-path <SERVICE_INSTALL_PATH>` — where to install the service file
 
   Default value: `/etc/systemd/system/NAME-version-manager-rs.service`
-* `--user <USER>`
+* `--user <USER>` — user to run service as
 
   Default value: `NAME-version-manager-rs`
 
 
 
-## `NAME-version-manager-rs install-service windows-service`
+## `NAME-version-manager-rs service install windows-service`
 
 Install Windows Service
 
-**Usage:** `NAME-version-manager-rs install-service windows-service [OPTIONS]`
+**Usage:** `NAME-version-manager-rs service install windows-service [OPTIONS]`
 
 ###### **Options:**
 
-* `--service-name <SERVICE_NAME>`
+* `--service-name <SERVICE_NAME>` — name of service
 
   Default value: `NAME-version-manager-rs`
-* `--service-description <SERVICE_DESCRIPTION>`
+* `--service-description <SERVICE_DESCRIPTION>` — description of service
 
   Default value: ``
+
+
+
+## `NAME-version-manager-rs service reload`
+
+Reload specified version
+
+**Usage:** `NAME-version-manager-rs service reload [VERSION]`
+
+###### **Arguments:**
+
+* `<VERSION>` — version to install, defaults to global arg if provided otherwise env var
+
+
+
+## `NAME-version-manager-rs service start`
+
+Start specified version
+
+**Usage:** `NAME-version-manager-rs service start [VERSION]`
+
+###### **Arguments:**
+
+* `<VERSION>` — version to install, defaults to global arg if provided otherwise env var
+
+
+
+## `NAME-version-manager-rs service stop`
+
+Stop specified version
+
+**Usage:** `NAME-version-manager-rs service stop [VERSION]`
+
+###### **Arguments:**
+
+* `<VERSION>` — version to install, defaults to global arg if provided otherwise env var
+
+
 
 <hr/>
 

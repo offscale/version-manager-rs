@@ -13,14 +13,14 @@ lazy_static! {
 
 #[macro_export]
 macro_rules! cli_struct_and_helpers {
-    ($name:expr, $author:expr, $version:expr, $about:expr) => {
+    ($name:expr, $author:expr, $version:expr, $about:expr, $port:expr) => {
         use clap::{CommandFactory, Parser};
         use const_format::concatcp;
 
         const VM_ROOT_DEFAULT: &'static str =
             concatcp!("$HOME", std::path::MAIN_SEPARATOR_STR, "version-managers");
-        const ROOT_DEFAULT: &'static str = concatcp!(
-            VM_ROOT_DEFAULT, std::path::MAIN_SEPARATOR_STR, $name);
+        const ROOT_DEFAULT: &'static str =
+            concatcp!(VM_ROOT_DEFAULT, std::path::MAIN_SEPARATOR_STR, $name);
         const VERSIONED_ROOT_DEFAULT: &'static str = concatcp!(
             ROOT_DEFAULT,
             std::path::MAIN_SEPARATOR_STR,
@@ -72,7 +72,7 @@ macro_rules! cli_struct_and_helpers {
             hostname: String,
 
             /// Port for server to listen on.
-            #[arg(short, long, env = "PORT")]
+            #[arg(short, long, env = "PORT", default_value_t = $port)]
             port: u16,
 
             /// Database name.
@@ -116,19 +116,33 @@ macro_rules! cli_struct_and_helpers {
         #[derive(clap::Subcommand, std::fmt::Debug, serde::Serialize, serde::Deserialize)]
         enum Commands {
             /// Download specified version
-            Download { version: Option<String> },
+            Download {
+                /// version to install, defaults to global arg if provided otherwise env var
+                version: Option<String>
+            },
+
+            /// Resolve download URL and hash/checksum. Useful for security and concurrency.
+            DownloadPlan {
+                /// version to install, defaults to global arg if provided otherwise env var
+                version: Option<String>
+            },
 
             /// Print out associated environment variables
             Env {},
 
             /// Install specified version
-            Install { version: Option<String> },
+            Install {
+                /// version to install, defaults to global arg if provided otherwise env var
+                version: Option<String>,
+                /// dependencies to skip installation of, defaults to install all. Skip all with *.
+                skip_dependencies: Option<Vec<String>>
+            },
 
             /// Install (only) dependencies for specified version
-            InstallDependencies { version: Option<String> },
-
-            /// Install service (daemon), e.g., systemd, OpenRC, windows-service
-            InstallService(InstallService),
+            InstallDependencies {
+                /// version to install, defaults to global arg if provided otherwise env var
+                version: Option<String>
+            },
 
             /// List what versions are installed
             Ls {},
@@ -136,17 +150,42 @@ macro_rules! cli_struct_and_helpers {
             /// List what versions are available
             LsRemote {},
 
-            /// Reload specified version
-            Reload { version: Option<String> },
-
-            /// Start specified version
-            Start { version: Option<String> },
-
-            /// Stop specified version
-            Stop { version: Option<String> },
-
             /// Print out database connection string
             Uri {},
+
+            /// Service management
+            Service(ServiceArgs)
+        }
+
+        #[derive(clap::Args, std::fmt::Debug, serde::Serialize, serde::Deserialize)]
+        struct ServiceArgs {
+            #[clap(subcommand)]
+            commands: ServiceCommands,
+        }
+
+        /// Service management
+        #[derive(clap::Subcommand, std::fmt::Debug, serde::Serialize, serde::Deserialize)]
+        enum ServiceCommands {
+            /// Install service (daemon), e.g., systemd, OpenRC, windows-service
+            Install(InstallService),
+
+            /// Reload specified version
+            Reload {
+                /// version to install, defaults to global arg if provided otherwise env var
+                version: Option<String>
+            },
+
+            /// Start specified version
+            Start {
+                /// version to install, defaults to global arg if provided otherwise env var
+                version: Option<String>
+            },
+
+            /// Stop specified version
+            Stop {
+                /// version to install, defaults to global arg if provided otherwise env var
+                version: Option<String>
+            },
         }
 
         #[derive(std::fmt::Debug, clap::Args, serde::Serialize, serde::Deserialize)]
@@ -213,6 +252,7 @@ macro_rules! cli_struct_and_helpers {
 
         /// Common errors
         pub(crate) mod errors {
+            /// Error enum for version-manager-rs purposes
             pub(crate) enum IoOrJsonError {
                 Io { source: std::io::Error },
                 SerdeJson { source: serde_json::Error },
@@ -264,6 +304,7 @@ macro_rules! cli_struct_and_helpers {
         pub(crate) mod command {
             use crate::Cli;
 
+            /// A reasonable default implementation of the `ls` command
             pub(crate) fn default_ls_command(args: &Cli) -> Result<(), std::io::Error> {
                 let entries: Vec<std::path::PathBuf> = {
                     let mut _entries = std::fs::read_dir(&args.root)?
@@ -280,8 +321,9 @@ macro_rules! cli_struct_and_helpers {
         /// Config helper functions
         pub(crate) mod config {
             use crate::errors::IoOrJsonError;
-            use crate::{Cli, Commands};
+            use crate::{Cli, Commands, config, ServiceCommands};
 
+            /// Determine whether config should be written to a file
             pub(crate) fn should_write_to_config(args: &Cli) -> bool {
                 if !args.config_write {
                     return false;
@@ -289,13 +331,17 @@ macro_rules! cli_struct_and_helpers {
                 match &args.command {
                     Commands::Ls {}
                     | Commands::LsRemote {}
-                    | Commands::Uri {}
-                    | Commands::Reload { version: _ }
-                    | Commands::Stop { version: _ } => false,
+                    | Commands::Uri {} => false,
+                    Commands::Service(service_args) => match service_args.commands {
+                        ServiceCommands::Reload { version: _ }
+                        | ServiceCommands::Stop { version: _ } => true,
+                        _ => false,
+                    },
                     _ => true,
                 }
             }
 
+            /// Write config to file
             pub(crate) fn config_file_write(args: &Cli) -> Result<(), IoOrJsonError> {
                 serde_json::to_writer(
                     std::fs::File::create(&args.vms_config).map_err(IoOrJsonError::from)?,
@@ -304,6 +350,7 @@ macro_rules! cli_struct_and_helpers {
                 .map_err(IoOrJsonError::from)
             }
 
+            /// Write config to file, if `should_write_to_config` is true
             pub(crate) fn maybe_config_file_write(args: &Cli) -> Result<(), IoOrJsonError> {
                 if config::should_write_to_config(&args) {
                     config::config_file_write(&args)
@@ -312,7 +359,9 @@ macro_rules! cli_struct_and_helpers {
                 }
             }
 
-            pub(crate) fn maybe_config_from_file(args: &mut Cli) -> Result<Option<Cli>, IoOrJsonError> {
+            /// Read config from file, if existent and config_read is true
+            pub(crate)
+            fn maybe_config_from_file(args: &mut Cli) -> Result<Option<Cli>, IoOrJsonError> {
                 let config_path = std::path::Path::new(&args.vms_config);
                 if !args.config_read {
                     return Ok(None);
