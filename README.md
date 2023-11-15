@@ -94,6 +94,10 @@ https://github.com/offscale/postgres-version-manager-go
 
   - MariaDB - https://github.com/offscale/mariadb-version-manager-rs
 
+## Related work
+
+  - https://github.com/asdf-vm/asdf - same idea as this project, without the cross-platform (e.g., incl. Windows) focus
+
 # Command-Line Help for `NAME-version-manager-rs`
 
 This document contains the help content for the `NAME-version-manager-rs` command-line program.
