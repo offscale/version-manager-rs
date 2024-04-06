@@ -302,6 +302,7 @@ macro_rules! cli_struct_and_helpers {
 
         /// Default commands to use or copy the interface of for ones own implementation
         pub(crate) mod command {
+            use clap::CommandFactory;
             use crate::Cli;
 
             /// A reasonable default implementation of the `ls` command
@@ -315,6 +316,14 @@ macro_rules! cli_struct_and_helpers {
                 };
                 print!("{:?}", entries);
                 Ok(())
+            }
+
+            /// Run default commands, expected to be put in else/default block
+            pub(crate) fn default_command(args: &Cli) -> Result<(), std::io::Error> {
+                match &args.command {
+                    crate::Commands::Ls {} => default_ls_command(&args),
+                    _ => Cli::command().print_help()
+                }
             }
         }
 
