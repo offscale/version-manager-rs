@@ -383,12 +383,73 @@ macro_rules! cli_struct_and_helpers {
                 } else if !config_path.is_file() {
                     return Ok(None);
                 }
-                println!("reading from config file {:?}", args.vms_config);
+                println!("reading from config file {:?}\n", args.vms_config);
                 return serde_json::from_reader(
                     std::fs::File::open(config_path).map_err(IoOrJsonError::from)?,
                 )
                 .map(Some)
                 .map_err(IoOrJsonError::from);
+            }
+
+            /// Resolve `$HOME` from input path using `cache` to avoid multi-evaluation
+            pub(crate)
+            fn resolve_vars(
+                path: &std::path::Path,
+                cache: &mut std::collections::HashMap<std::ffi::OsString, std::ffi::OsString>,
+            ) -> std::ffi::OsString {
+                /* Avoid resolving home if not first component */
+                let mut first_component: bool = true;
+                let components: std::path::PathBuf = path
+                    .components()
+                    .map(|s: std::path::Component| {
+                        let val: std::ffi::OsString = {
+                            let key: std::ffi::OsString = if s == std::path::Component::Normal("~".as_ref()) {
+                                "$HOME".into()
+                            } else {
+                                s.as_os_str().to_owned()
+                            };
+
+                            if std::ffi::OsStr::to_str(&*key)
+                                .unwrap_or("")
+                                .starts_with("$")
+                            {
+                                cache
+                                    .get(&key)
+                                    .cloned()
+                                    .or_else(|| {
+                                        if key == "$HOME" && first_component {
+                                            match std::env::home_dir() {
+                                                Some(home) => Some(home.into_os_string()),
+                                                None => Some(key.into()),
+                                            }
+                                        } else {
+                                            Some(key.into())
+                                        }
+                                    })
+                                    .unwrap_or_else(|| s.as_os_str().to_owned().into())
+                            } else {
+                                s.as_os_str().to_owned().into()
+                            }
+                        };
+                        first_component = false;
+                        val
+                    })
+                    .collect::<std::path::PathBuf>();
+                components.into_os_string()
+            }
+
+            /// Ensure that each path-style variable has its internal vars resolved
+            pub(crate)
+            fn resolve_config_vars(args: &mut Cli) {
+                let mut cache: std::collections::HashMap<std::ffi::OsString, std::ffi::OsString> =
+                    std::collections::HashMap::new();
+                args.vms_config = resolve_vars(std::path::Path::new(&args.vms_config), &mut cache);
+                args.vm_root = resolve_vars(std::path::Path::new(&args.vm_root), &mut cache);
+                args.root = resolve_vars(std::path::Path::new(&args.root), &mut cache);
+                args.runtime_path = resolve_vars(std::path::Path::new(&args.runtime_path), &mut cache);
+                args.data_path = resolve_vars(std::path::Path::new(&args.data_path), &mut cache);
+                args.bin_path = resolve_vars(std::path::Path::new(&args.bin_path), &mut cache);
+                args.logs_path = resolve_vars(std::path::Path::new(&args.logs_path), &mut cache);
             }
         }
     };
