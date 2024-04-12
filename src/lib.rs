@@ -43,6 +43,7 @@ macro_rules! cli_struct_and_helpers {
             vms_config: std::ffi::OsString,
 
             /// Whether to read from config file. If vms_config provided, this defaults to  `true` .
+            #[serde(skip)]
             #[arg(long, env = "VMS_CONFIG_READ", default_value_t = false)]
             config_read: bool,
 
@@ -352,6 +353,13 @@ macro_rules! cli_struct_and_helpers {
 
             /// Write config to file
             pub(crate) fn config_file_write(args: &Cli) -> Result<(), IoOrJsonError> {
+                std::fs::create_dir_all(
+                    std::path::Path::new(&args.vms_config)
+                      .parent()
+                      .ok_or(IoOrJsonError::from(
+                        std::io::Error::from(std::io::ErrorKind::NotFound)
+                      ))?
+                )?;
                 serde_json::to_writer(
                     std::fs::File::create(&args.vms_config).map_err(IoOrJsonError::from)?,
                     &args,
