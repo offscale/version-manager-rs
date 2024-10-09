@@ -4,6 +4,8 @@ version-manager-rs
 
 The future base of configuration management tooling. Use this set of macros/functions/design-patterns to write independent version managers.
 
+For further detail see https://verMan.io and its organisation https://github.com/verman-io
+
 ## Novelty
 
 This idea isn't new, e.g., see:
